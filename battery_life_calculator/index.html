@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Battery Life Calculator</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      /* Simple styles for tooltip */
+      .tooltip {
+        position: relative;
+        display: inline-block;
+        cursor: help;
+        color: #666;
+        margin-left: 5px;
+      }
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 200px;
+        background-color: #333;
+        color: #fff;
+        text-align: left;
+        border-radius: 5px;
+        padding: 5px 10px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%; /* Position above the icon */
+        left: 50%;
+        margin-left: -100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.85em;
+      }
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+        opacity: 1;
+      }
+      /* Summary styles */
+      .summary {
+        background: #f5fafd;
+        border-left: 4px solid #007bff;
+        padding: 15px 18px;
+        margin-bottom: 22px;
+        border-radius: 8px;
+        font-size: 1.07em;
+        color: #222;
+      }
+      body.dark-mode .summary {
+        background: #232b32;
+        border-left-color: #90caf9;
+        color: #e3f2fd;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Dark Mode Toggle -->
+      <button id="darkModeToggle" type="button" style="margin-bottom: 20px">
+        🌙 Toggle Dark Mode
+      </button>
+
+      <!-- Summary Paragraph -->
+      <div class="summary">
+        <strong>Battery Life Calculator</strong> helps you estimate how long
+        your device’s battery will last and its overall health based on your
+        usage habits, device type, and environmental factors. Enter your device
+        details to see runtime per charge, remaining lifespan, and tips to
+        maximize battery performance.
+      </div>
+
+      <!-- Header with calculation help link -->
+      <h1>
+        <i class="fas fa-battery-half"></i> Battery Life Calculator
+        <a
+          href="#"
+          id="calcHelp"
+          style="font-size: 0.6em; text-decoration: none"
+          >(How is this calculated?)</a
+        >
+      </h1>
+
+      <!-- Form -->
+      <form id="batteryForm">
+        <label for="device"
+          ><i class="fas fa-microchip"></i> Device Type:</label
+        >
+        <select id="device" required>
+          <option value="">Select device</option>
+          <option value="smartphone">Smartphone</option>
+          <option value="laptop">Laptop</option>
+          <option value="tablet">Tablet</option>
+          <option value="wearable">Wearable</option>
+          <option value="custom">Custom Device</option>
+        </select>
+
+        <!-- Custom device draw rate input -->
+        <div id="customDrawRateContainer" style="display: none">
+          <label for="customDrawRate"
+            ><i class="fas fa-tachometer-alt"></i> Custom Power Draw
+            (mAh/hour):</label
+          >
+          <input type="number" id="customDrawRate" min="50" max="5000" />
+        </div>
+
+        <label for="capacity"
+          ><i class="fas fa-bolt"></i> Battery Capacity (mAh):</label
+        >
+        <input type="number" id="capacity" min="100" required />
+
+        <label for="charging"
+          ><i class="fas fa-plug"></i> Charging Frequency (times/day):</label
+        >
+        <input type="number" id="charging" min="0" step="0.1" required />
+
+        <label for="usage"
+          ><i class="fas fa-clock"></i> Average Usage (hours/day):</label
+        >
+        <input type="number" id="usage" min="0" max="24" step="0.1" required />
+
+        <label for="brightness"
+          ><i class="fas fa-sun"></i> Screen Brightness (%):</label
+        >
+        <input type="number" id="brightness" min="0" max="100" required />
+
+        <!-- New inputs -->
+
+        <label for="batteryAge">
+          🔋 Battery Age (months):
+          <span class="tooltip"
+            >ℹ️
+            <span class="tooltiptext">
+              Enter how many months you have been using this battery.
+            </span>
+          </span>
+        </label>
+        <input
+          type="number"
+          id="batteryAge"
+          min="0"
+          max="60"
+          value="0"
+          title="Age of the battery in months"
+        />
+
+        <label for="temperature">
+          🌡️ Average Operating Temperature (°C):
+          <span class="tooltip"
+            >ℹ️
+            <span class="tooltiptext">
+              Typical temperature when using your device (ideal ~25°C).
+            </span>
+          </span>
+        </label>
+        <input
+          type="number"
+          id="temperature"
+          min="0"
+          max="50"
+          value="25"
+          title="Average temperature when using device"
+        />
+
+        <label for="usagePattern">
+          ⚡ Usage Pattern:
+          <span class="tooltip"
+            >ℹ️
+            <span class="tooltiptext">
+              Choose your typical usage intensity.
+            </span>
+          </span>
+        </label>
+        <select id="usagePattern" title="Select your typical usage intensity">
+          <option value="light">Light (calls, messages)</option>
+          <option value="moderate" selected>Moderate (browsing, apps)</option>
+          <option value="heavy">Heavy (gaming, video)</option>
+        </select>
+
+        <button type="submit" style="margin-top: 15px">
+          <i class="fas fa-calculator"></i> Calculate
+        </button>
+      </form>
+
+      <!-- Results Section -->
+      <div id="result" class="result-box"></div>
+
+      <!-- Battery Health Gauge -->
+      <div id="batteryGaugeContainer" style="margin-top: 20px">
+        <label for="batteryGauge"><strong>Battery Health:</strong></label>
+        <progress id="batteryGauge" value="0" max="100"></progress>
+        <!-- Battery Health Text -->
+        <div id="batteryHealth" style="margin-top: 10px"></div>
+      </div>
+
+      <!-- Battery Lifespan & Time Left -->
+      <div id="timeLeft" style="margin-top: 10px; font-weight: bold"></div>
+
+      <!-- Tips Section -->
+      <div id="tips"></div>
+    </div>
+
+    <!-- Calculation explanation modal -->
+    <div id="calcModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Calculation Methodology</h3>
+        <ul>
+          <li>
+            <strong>Runtime per full charge:</strong> <br />
+            <code>Battery Capacity ÷ (Device Draw Rate × Brightness %)</code>
+          </li>
+          <li>
+            <strong>Battery Health:</strong> <br />
+            <code>(Estimated Remaining Cycles ÷ 500) × 100</code>
+          </li>
+          <li>
+            <strong>Battery lifespan:</strong> <br />
+            <code>Estimated Remaining Cycles ÷ (Charge Cycles per Day)</code>
+          </li>
+          <li>
+            <strong>Cycle reduction factors:</strong><br />
+            - Age: 1% per month<br />
+            - High temperature: 5% per °C above 30°C<br />
+            - Heavy usage: up to 15% reduction
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
