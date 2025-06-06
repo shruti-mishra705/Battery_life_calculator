@@ -61,5 +61,8 @@ style.css
 script.js
 README.md
 
+# Deployed Link
+https://simple-battery-life-calculator.vercel.app/
+
 
 
